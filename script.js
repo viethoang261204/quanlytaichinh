@@ -3,6 +3,8 @@ let debts = [];
 let payments = [];
 let incomes = [];
 let expenses = [];
+let walletAmount = 0;
+let walletHistory = [];
 let editingDebtId = null;
 let editingIncomeId = null;
 let editingExpenseId = null;
@@ -23,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderPayments();
     renderIncomes();
     renderExpenses();
+    updateWalletDisplay();
     updateDashboard();
     updateDashboardStats();
     setTodayDate();
@@ -198,6 +201,35 @@ function savePayment(event) {
         return;
     }
     
+    // Kiểm tra số tiền trong ví
+    if (walletAmount < amount) {
+        if (!confirm(`Số tiền trong ví (${formatCurrency(walletAmount)}) không đủ để trả nợ (${formatCurrency(amount)}).\nBạn có muốn tiếp tục không?`)) {
+            return;
+        }
+    }
+    
+    // Trừ tiền từ ví
+    const oldWalletAmount = walletAmount;
+    walletAmount = Math.max(0, walletAmount - amount);
+    
+    // Lưu lịch sử giao dịch ví
+    walletHistory.push({
+        id: Date.now(),
+        type: 'subtract',
+        oldAmount: oldWalletAmount,
+        newAmount: walletAmount,
+        transactionAmount: amount,
+        note: `Trả nợ: ${debt.name}${note ? ' - ' + note : ''}`,
+        date: new Date().toISOString(),
+        relatedType: 'payment',
+        relatedId: Date.now()
+    });
+    
+    // Giới hạn lịch sử 100 giao dịch gần nhất
+    if (walletHistory.length > 100) {
+        walletHistory = walletHistory.slice(-100);
+    }
+    
     payments.push({
         id: Date.now(),
         debtId: debtId,
@@ -211,8 +243,16 @@ function savePayment(event) {
     saveData();
     renderDebts();
     renderPayments();
+    updateWalletDisplay();
     updateDashboard();
     closePaymentModal();
+    
+    // Thông báo
+    if (oldWalletAmount < amount) {
+        alert(`Đã trả nợ ${formatCurrency(amount)}. Số tiền trong ví đã hết (${formatCurrency(walletAmount)}).`);
+    } else {
+        alert(`Đã trả nợ ${formatCurrency(amount)}. Số tiền trong ví còn lại: ${formatCurrency(walletAmount)}.`);
+    }
 }
 
 function renderPayments() {
@@ -427,23 +467,108 @@ function saveExpense(event) {
     };
     
     if (editingExpenseId) {
+        // Sửa khoản chi - tìm khoản chi cũ để điều chỉnh số tiền
         const index = expenses.findIndex(e => e.id === editingExpenseId);
+        const oldExpense = expenses[index];
+        const amountDiff = expense.amount - oldExpense.amount;
+        
+        // Nếu số tiền tăng, trừ thêm từ ví. Nếu giảm, cộng lại vào ví
+        if (amountDiff !== 0) {
+            const oldWalletAmount = walletAmount;
+            walletAmount = Math.max(0, walletAmount - amountDiff);
+            
+            // Lưu lịch sử giao dịch ví
+            walletHistory.push({
+                id: Date.now(),
+                type: amountDiff > 0 ? 'subtract' : 'add',
+                oldAmount: oldWalletAmount,
+                newAmount: walletAmount,
+                transactionAmount: Math.abs(amountDiff),
+                note: `Sửa khoản chi: ${expense.name}${expense.note ? ' - ' + expense.note : ''}`,
+                date: new Date().toISOString(),
+                relatedType: 'expense_edit',
+                relatedId: expense.id
+            });
+            
+            // Giới hạn lịch sử 100 giao dịch gần nhất
+            if (walletHistory.length > 100) {
+                walletHistory = walletHistory.slice(-100);
+            }
+        }
+        
         expenses[index] = expense;
     } else {
+        // Thêm khoản chi mới - trừ tiền từ ví
+        const oldWalletAmount = walletAmount;
+        
+        // Kiểm tra số tiền trong ví
+        if (walletAmount < expense.amount) {
+            if (!confirm(`Số tiền trong ví (${formatCurrency(walletAmount)}) không đủ để chi (${formatCurrency(expense.amount)}).\nBạn có muốn tiếp tục không?`)) {
+                return;
+            }
+        }
+        
+        walletAmount = Math.max(0, walletAmount - expense.amount);
+        
+        // Lưu lịch sử giao dịch ví
+        walletHistory.push({
+            id: Date.now(),
+            type: 'subtract',
+            oldAmount: oldWalletAmount,
+            newAmount: walletAmount,
+            transactionAmount: expense.amount,
+            note: `Khoản chi: ${expense.name}${expense.note ? ' - ' + expense.note : ''}`,
+            date: new Date().toISOString(),
+            relatedType: 'expense',
+            relatedId: expense.id
+        });
+        
+        // Giới hạn lịch sử 100 giao dịch gần nhất
+        if (walletHistory.length > 100) {
+            walletHistory = walletHistory.slice(-100);
+        }
+        
         expenses.push(expense);
     }
     
     saveData();
     renderExpenses();
+    updateWalletDisplay();
     updateDashboardStats();
     closeExpenseModal();
 }
 
 function deleteExpense(id) {
     if (confirm('Bạn có chắc chắn muốn xóa khoản chi này?')) {
+        const expense = expenses.find(e => e.id === id);
+        if (expense) {
+            // Cộng lại tiền vào ví khi xóa khoản chi
+            const oldWalletAmount = walletAmount;
+            walletAmount = walletAmount + expense.amount;
+            
+            // Lưu lịch sử giao dịch ví
+            walletHistory.push({
+                id: Date.now(),
+                type: 'add',
+                oldAmount: oldWalletAmount,
+                newAmount: walletAmount,
+                transactionAmount: expense.amount,
+                note: `Xóa khoản chi: ${expense.name}`,
+                date: new Date().toISOString(),
+                relatedType: 'expense_delete',
+                relatedId: id
+            });
+            
+            // Giới hạn lịch sử 100 giao dịch gần nhất
+            if (walletHistory.length > 100) {
+                walletHistory = walletHistory.slice(-100);
+            }
+        }
+        
         expenses = expenses.filter(e => e.id !== id);
         saveData();
         renderExpenses();
+        updateWalletDisplay();
         updateDashboardStats();
     }
 }
@@ -791,6 +916,8 @@ function saveData() {
         payments: payments,
         incomes: incomes,
         expenses: expenses,
+        walletAmount: walletAmount,
+        walletHistory: walletHistory,
         lastUpdated: new Date().toISOString()
     };
     localStorage.setItem(`financeData_${userId}`, JSON.stringify(data));
@@ -808,6 +935,8 @@ function loadData() {
             payments = data.payments || [];
             incomes = data.incomes || [];
             expenses = data.expenses || [];
+            walletAmount = data.walletAmount || 0;
+            walletHistory = data.walletHistory || [];
         } catch (e) {
             console.error('Lỗi khi tải dữ liệu:', e);
         }
@@ -817,6 +946,8 @@ function loadData() {
         payments = [];
         incomes = [];
         expenses = [];
+        walletAmount = 0;
+        walletHistory = [];
     }
 }
 
@@ -826,6 +957,8 @@ function exportData() {
         payments: payments,
         incomes: incomes,
         expenses: expenses,
+        walletAmount: walletAmount,
+        walletHistory: walletHistory,
         exportedAt: new Date().toISOString()
     };
     
@@ -856,11 +989,14 @@ function importData(event) {
                 payments = data.payments || [];
                 incomes = data.incomes || [];
                 expenses = data.expenses || [];
+                walletAmount = data.walletAmount || 0;
+                walletHistory = data.walletHistory || [];
                 saveData();
                 renderDebts();
                 renderPayments();
                 renderIncomes();
                 renderExpenses();
+                updateWalletDisplay();
                 updateDashboard();
                 updateDashboardStats();
                 alert('Đã nhập dữ liệu thành công!');
@@ -896,6 +1032,115 @@ function formatMonth(monthString) {
     const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
     return `${monthNames[parseInt(month) - 1]} ${year}`;
+}
+
+// ========== QUẢN LÝ TIỀN TRONG VÍ ==========
+
+function openWalletModal() {
+    const modal = document.getElementById('walletModal');
+    document.getElementById('walletCurrentAmount').value = walletAmount;
+    document.getElementById('walletTransactionType').value = 'set';
+    document.getElementById('walletTransactionAmount').value = 0;
+    document.getElementById('walletNote').value = '';
+    toggleWalletTransactionAmount();
+    modal.classList.add('active');
+}
+
+function closeWalletModal() {
+    document.getElementById('walletModal').classList.remove('active');
+}
+
+function toggleWalletTransactionAmount() {
+    const type = document.getElementById('walletTransactionType').value;
+    const setAmountGroup = document.getElementById('walletSetAmountGroup');
+    const transactionAmountGroup = document.getElementById('walletTransactionAmountGroup');
+    const amountLabel = document.getElementById('walletTransactionAmountLabel');
+    const amountInput = document.getElementById('walletTransactionAmount');
+    const setAmountInput = document.getElementById('walletSetAmount');
+    
+    if (type === 'set') {
+        setAmountGroup.style.display = 'block';
+        transactionAmountGroup.style.display = 'none';
+        setAmountInput.setAttribute('required', 'required');
+        setAmountInput.value = walletAmount;
+        amountInput.removeAttribute('required');
+    } else {
+        setAmountGroup.style.display = 'none';
+        transactionAmountGroup.style.display = 'block';
+        setAmountInput.removeAttribute('required');
+        amountInput.setAttribute('required', 'required');
+        if (type === 'add') {
+            amountLabel.textContent = 'Số Tiền Thêm Vào (đ):';
+        } else {
+            amountLabel.textContent = 'Số Tiền Rút Ra (đ):';
+        }
+    }
+}
+
+function updateWallet(event) {
+    event.preventDefault();
+    
+    const type = document.getElementById('walletTransactionType').value;
+    const note = document.getElementById('walletNote').value || '';
+    const oldAmount = walletAmount;
+    let newAmount = walletAmount;
+    let transactionAmount = 0;
+    
+    switch(type) {
+        case 'set':
+            const setAmount = parseFloat(document.getElementById('walletSetAmount').value) || 0;
+            newAmount = setAmount;
+            transactionAmount = newAmount - oldAmount;
+            break;
+        case 'add':
+            transactionAmount = parseFloat(document.getElementById('walletTransactionAmount').value) || 0;
+            newAmount = walletAmount + transactionAmount;
+            break;
+        case 'subtract':
+            transactionAmount = parseFloat(document.getElementById('walletTransactionAmount').value) || 0;
+            newAmount = walletAmount - transactionAmount;
+            if (newAmount < 0) {
+                alert('Số tiền trong ví không đủ để rút!');
+                return;
+            }
+            break;
+    }
+    
+    // Lưu lịch sử giao dịch
+    walletHistory.push({
+        id: Date.now(),
+        type: type,
+        oldAmount: oldAmount,
+        newAmount: newAmount,
+        transactionAmount: transactionAmount,
+        note: note,
+        date: new Date().toISOString()
+    });
+    
+    // Giới hạn lịch sử 100 giao dịch gần nhất
+    if (walletHistory.length > 100) {
+        walletHistory = walletHistory.slice(-100);
+    }
+    
+    walletAmount = newAmount;
+    saveData();
+    updateWalletDisplay();
+    closeWalletModal();
+    
+    // Hiển thị thông báo
+    const typeLabels = {
+        'set': 'Đã cập nhật',
+        'add': 'Đã thêm',
+        'subtract': 'Đã rút'
+    };
+    alert(`${typeLabels[type]} ${formatCurrency(transactionAmount || Math.abs(newAmount - oldAmount))} vào ví thành công!`);
+}
+
+function updateWalletDisplay() {
+    const walletEl = document.getElementById('walletAmount');
+    if (walletEl) {
+        walletEl.textContent = formatCurrency(walletAmount);
+    }
 }
 
 // Đóng modal khi click bên ngoài

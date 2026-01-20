@@ -28,6 +28,8 @@ function initDefaultAdmin() {
             payments: [],
             incomes: [],
             expenses: [],
+            walletAmount: 0,
+            walletHistory: [],
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem(`financeData_${adminUser.id}`, JSON.stringify(adminFinanceData));
@@ -152,6 +154,9 @@ function handleRegister(event) {
         debts: [],
         payments: [],
         incomes: [],
+        expenses: [],
+        walletAmount: 0,
+        walletHistory: [],
         lastUpdated: new Date().toISOString()
     };
     localStorage.setItem(`financeData_${newUser.id}`, JSON.stringify(userFinanceData));

@@ -24,6 +24,11 @@
 
         <!-- Dashboard Summary -->
         <section class="dashboard">
+            <div class="summary-card" style="position: relative;">
+                <h3>💰 Tiền Trong Ví</h3>
+                <p class="amount" id="walletAmount" style="color: #f39c12; font-size: 2.2em;">0 đ</p>
+                <button class="btn btn-primary" onclick="openWalletModal()" style="position: absolute; top: 15px; right: 15px; padding: 8px 16px; font-size: 0.9em;">✏️ Cập Nhật</button>
+            </div>
             <div class="summary-card">
                 <h3>Tổng Nợ</h3>
                 <p class="amount debt" id="totalDebt">0 đ</p>
@@ -341,6 +346,44 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Hủy</button>
                     <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Cập Nhật Tiền Trong Ví -->
+    <div id="walletModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWalletModal()">&times;</span>
+            <h2>💰 Cập Nhật Tiền Trong Ví</h2>
+            <form id="walletForm" onsubmit="updateWallet(event)">
+                <div class="form-group">
+                    <label>Số Tiền Hiện Tại Trong Ví (đ):</label>
+                    <input type="number" id="walletCurrentAmount" min="0" step="1000" readonly style="background: #f0f0f0;">
+                </div>
+                <div class="form-group">
+                    <label>Loại Giao Dịch:</label>
+                    <select id="walletTransactionType" required onchange="toggleWalletTransactionAmount()">
+                        <option value="set">Đặt Số Tiền (Thay Thế)</option>
+                        <option value="add">Thêm Tiền Vào Ví</option>
+                        <option value="subtract">Rút Tiền Từ Ví</option>
+                    </select>
+                </div>
+                <div class="form-group" id="walletSetAmountGroup">
+                    <label>Số Tiền Mới (đ):</label>
+                    <input type="number" id="walletSetAmount" min="0" step="1000" value="0">
+                </div>
+                <div class="form-group" id="walletTransactionAmountGroup" style="display: none;">
+                    <label id="walletTransactionAmountLabel">Số Tiền (đ):</label>
+                    <input type="number" id="walletTransactionAmount" min="0" step="1000" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Ghi Chú:</label>
+                    <textarea id="walletNote" rows="3" placeholder="Ví dụ: Lương tháng 12, Rút tiền mua sắm..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeWalletModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập Nhật</button>
                 </div>
             </form>
         </div>
