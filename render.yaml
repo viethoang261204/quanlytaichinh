@@ -11,10 +11,10 @@ services:
     routes:
       - type: rewrite
         source: /dang-nhap
-        destination: /login.html
+        destination: /dang-nhap.html
       - type: rewrite
         source: /dang-ky
-        destination: /register.html
+        destination: /dang-ky.html
       - type: rewrite
         source: /trang-chu
         destination: /trang-chu.html

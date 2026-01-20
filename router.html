@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Tài Chính</title>
+    <script>
+        // Router đơn giản cho Render
+        (function() {
+            const path = window.location.pathname;
+            const routes = {
+                '/': 'trang-chu.html',
+                '/trang-chu': 'trang-chu.html',
+                '/dang-nhap': 'login.html',
+                '/dang-ky': 'register.html'
+            };
+            
+            const cleanPath = path.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+            const targetFile = routes[cleanPath] || routes[path] || 'trang-chu.html';
+            
+            // Load file tương ứng
+            fetch(targetFile)
+                .then(response => response.text())
+                .then(html => {
+                    document.open();
+                    document.write(html);
+                    document.close();
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    window.location.href = 'trang-chu.html';
+                });
+        })();
+    </script>
+</head>
+<body>
+    <p>Đang tải...</p>
+</body>
+</html>
+

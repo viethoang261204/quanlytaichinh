@@ -44,14 +44,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentFile = window.location.pathname.split('/').pop();
     
     // Nếu đã đăng nhập và đang ở trang login/register, chuyển về trang chủ
-    if (currentUser && (currentFile === 'login.html' || currentFile === 'register.html')) {
-        window.location.href = 'trang-chu.html';
+    if (currentUser && (currentFile === 'login.html' || currentFile === 'register.html' || currentFile === 'dang-nhap.html' || currentFile === 'dang-ky.html')) {
+        window.location.href = '/trang-chu';
         return;
     }
     
     // Nếu chưa đăng nhập và đang ở trang cần đăng nhập, chuyển về trang đăng nhập
-    if (!currentUser && currentFile === 'trang-chu.html') {
-        window.location.href = 'login.html';
+    if (!currentUser && (currentFile === 'trang-chu.html' || currentFile === 'trang-chu')) {
+        window.location.href = '/dang-nhap';
         return;
     }
     
@@ -162,7 +162,7 @@ function handleRegister(event) {
     
     // Chuyển đến trang đăng nhập sau 2 giây
     setTimeout(() => {
-        window.location.href = 'login.html';
+        window.location.href = '/dang-nhap';
     }, 2000);
 }
 
@@ -207,14 +207,14 @@ function handleLogin(event) {
     }
     
     // Chuyển đến trang chủ
-    window.location.href = 'trang-chu.html';
+    window.location.href = '/trang-chu';
 }
 
 // Đăng xuất
 function handleLogout() {
     localStorage.removeItem('currentUser');
     sessionStorage.removeItem('currentUser');
-    window.location.href = 'login.html';
+    window.location.href = '/dang-nhap';
 }
 
 // Lấy danh sách users
