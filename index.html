@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đang chuyển hướng...</title>
+    <script>
+        // Redirect đến trang chủ
+        const path = window.location.pathname;
+        const routes = {
+            '/': 'trang-chu.html',
+            '/trang-chu': 'trang-chu.html',
+            '/dang-nhap': 'login.html',
+            '/dang-ky': 'register.html'
+        };
+        
+        const cleanPath = path.replace(/\.html$/, '') || '/';
+        const targetFile = routes[cleanPath] || routes[path];
+        
+        if (targetFile) {
+            window.location.href = targetFile;
+        } else {
+            // Nếu không tìm thấy route, chuyển về trang chủ
+            window.location.href = 'trang-chu.html';
+        }
+    </script>
+</head>
+<body>
+    <p>Đang chuyển hướng...</p>
+</body>
+</html>

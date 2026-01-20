@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - Quản Lý Tài Chính</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            animation: slideUp 0.5s;
+        }
+        .auth-card h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .auth-card .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .auth-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .password-strength {
+            margin-top: 5px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        .password-strength.weak {
+            color: #e74c3c;
+        }
+        .password-strength.medium {
+            color: #f39c12;
+        }
+        .password-strength.strong {
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>📝 Đăng Ký</h1>
+            <p class="subtitle">Tạo tài khoản mới</p>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Họ và Tên:</label>
+                    <input type="text" id="registerName" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Tên đăng nhập:</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu:</label>
+                    <input type="password" id="registerPassword" required oninput="checkPasswordStrength()">
+                    <div id="passwordStrength" class="password-strength"></div>
+                </div>
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu:</label>
+                    <input type="password" id="registerPasswordConfirm" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Đăng Ký</button>
+                </div>
+            </form>
+            
+            <div class="auth-links">
+                Đã có tài khoản? <a href="login.html">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="routing.js"></script>
+</body>
+</html>
+
