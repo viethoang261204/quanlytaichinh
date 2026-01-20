@@ -5,25 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đang chuyển hướng...</title>
     <script>
-        // Redirect đến trang chủ
-        const path = window.location.pathname;
-        const routes = {
-            '/': 'trang-chu.html',
-            '/trang-chu': 'trang-chu.html',
-            '/dang-nhap': 'login.html',
-            '/dang-ky': 'register.html'
-        };
-        
-        const cleanPath = path.replace(/\.html$/, '') || '/';
-        const targetFile = routes[cleanPath] || routes[path];
-        
-        if (targetFile) {
-            window.location.href = targetFile;
-        } else {
+        // Xử lý routing cho Render
+        (function() {
+            const path = window.location.pathname;
+            const routes = {
+                '/': 'trang-chu.html',
+                '/trang-chu': 'trang-chu.html',
+                '/dang-nhap': 'login.html',
+                '/dang-ky': 'register.html',
+                '/index.html': 'trang-chu.html',
+                '/index': 'trang-chu.html'
+            };
+            
+            // Loại bỏ .html và trailing slash
+            const cleanPath = path.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+            
+            // Tìm route tương ứng
+            let targetFile = routes[cleanPath] || routes[path];
+            
+            // Nếu không tìm thấy, kiểm tra các biến thể
+            if (!targetFile) {
+                // Thử với path gốc
+                targetFile = routes[path];
+                
+                // Nếu vẫn không có và path không phải root, thử thêm .html
+                if (!targetFile && path !== '/' && !path.includes('.')) {
+                    targetFile = routes[path + '.html'];
+                }
+            }
+            
+            // Redirect đến file tương ứng
+            if (targetFile) {
+                // Sử dụng replace để không tạo history entry
+                if (targetFile !== path && !path.endsWith(targetFile)) {
+                    window.location.replace(targetFile);
+                    return;
+                }
+            }
+            
+            // Nếu là root hoặc index, chuyển đến trang chủ
+            if (path === '/' || path === '/index.html' || path === '/index') {
+                window.location.replace('trang-chu.html');
+                return;
+            }
+            
             // Nếu không tìm thấy route, chuyển về trang chủ
-            window.location.href = 'trang-chu.html';
-        }
+            window.location.replace('trang-chu.html');
+        })();
     </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        p {
+            font-size: 1.2em;
+        }
+    </style>
 </head>
 <body>
     <p>Đang chuyển hướng...</p>
